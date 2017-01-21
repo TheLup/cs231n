@@ -40,10 +40,10 @@ def svm_loss_naive(W, X, y, reg):
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
-  dW /= num_train
+    
   # Add regularization to the loss.
   loss += 0.5 * reg * np.sum(W * W)
-  dW += reg * W
+
   #############################################################################
   # TODO:                                                                     #
   # Compute the gradient of the loss function and store it dW.                #
@@ -51,8 +51,9 @@ def svm_loss_naive(W, X, y, reg):
   # it may be simpler to compute the derivative at the same time that the     #
   # loss is being computed. As a result you may need to modify some of the    #
   # code above to compute the gradient.                                       #
+  dW /= num_train
+  dW += reg * W
   #############################################################################
-
 
   return loss, dW
 
@@ -73,8 +74,20 @@ def svm_loss_vectorized(W, X, y, reg):
   #############################################################################
   num_classes = W.shape[1]
   num_train = X.shape[0]
+    
   scores = X.dot(W)
-  correct_class_score = scores[, ]
+
+  num_train_arange = np.arange(num_train)
+  correct_class_score = scores[num_train_arange, y]
+
+  margin = scores - correct_class_score.reshape(scores.shape[0], 1) + 1
+  margin[num_train_arange, y] = 0
+  zero_array = np.zeros((margin.shape[0], margin.shape[1]))
+  margin = np.maximum(zero_array, margin)
+
+  loss = np.sum(margin)
+  loss /= num_train
+  loss += 0.5 * reg * np.sum(W * W)
     
   #############################################################################
   #                             END OF YOUR CODE                              #
@@ -90,7 +103,15 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  
+  margin_bool = (margin>0)
+  mask = np.ones((margin.shape[0], margin.shape[1]))
+  mask = margin_bool * mask
+  mask[num_train_arange, y] = -1 * np.sum(mask, axis=1)
+  dW += np.matmul(X.T, mask)
+
+  dW /= num_train
+  dW += reg * W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
