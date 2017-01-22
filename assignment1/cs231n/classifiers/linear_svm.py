@@ -105,7 +105,7 @@ def svm_loss_vectorized(W, X, y, reg):
   #############################################################################
   
   margin_bool = (margin>0)
-  mask = np.ones((margin.shape[0], margin.shape[1]))
+  mask = np.ones((margin.shape))
   mask = margin_bool * mask
   mask[num_train_arange, y] = -1 * np.sum(mask, axis=1)
   dW += np.matmul(X.T, mask)
